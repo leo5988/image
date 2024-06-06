@@ -28,10 +28,10 @@ app.use(express.urlencoded({extended: true}));
 app.post('/upload', upload.single('image'),(req, res)=>{
   const{ name } = req.body;
   const imagePath = req.file.path;
-
+  const{phoneSerialNumber} = req.body;
 //Save name and photo path to MySQL
-  const sql = 'INSERT INTO HtmlTest.flutterPicture(name, image_path) VALUES (?,?)';
-db.query(sql, [name,imagePath], (err, result) => {
+  const sql = 'INSERT INTO HtmlTest.flutterPicture(name, image_path, phoneSerialNumber) VALUES (?,?,?)';
+db.query(sql, [name,imagePath,phoneSerialNumber], (err, result) => {
  if(err) {
 
    console.error('Error upload data:',err);
@@ -84,12 +84,10 @@ console.log(phoneSerialNumber);
 });
 //地圖查詢
 app.get('/search',(req, res) => {
-   
-   const  name = req.query.name;   
- 
+   const  name = req.query.name
+   console.log(name);
     const sql = 'select HtmlTest.peoplePosition.locationMessage,HtmlTest.flutterPicture.image_path,HtmlTest.flutterPicture.phoneSerialNumber, HtmlTest.peoplePosition.currentAddress,HtmlTest.peoplePosition.locationTime from HtmlTest.peoplePosition join HtmlTest.flutterPicture on HtmlTest.peoplePosition.locationName = HtmlTest.flutterPicture.name where HtmlTest.peoplePosition.locationName = ? order by HtmlTest.peoplePosition.idposition desc , HtmlTest.flutterPicture.idflutterPicture desc limit 1'; 
- 
-  
+
  db.query(sql,[name],(error, results) => {
     if(error) {
        console.error(error);
@@ -139,7 +137,7 @@ app.get('/searchData',(req,res) => {
      }else{
          let data = [];
          for(let i = 0;i < results.length; i++){
-          //時間格式修改
+          //時間格式修改SELECT * FROM HtmlTest.flutterPicture where name = 'lolly';
             const originalDateTime = results[i].locationTime;
 
            data.push({
@@ -178,9 +176,72 @@ app.get('/searchDate',(req,res) => {
           }
          res.json(data);
         console.log(data);
+        }});
+});
+
+//照片查詢
+app.get('/searchImage',(req, res) => {
+   
+   const  name = req.query.name;   
+ 
+    const sql = 'SELECT * FROM HtmlTest.flutterPicture where name = ?';
+ 
+ db.query(sql,[name],(error, results) => {
+    if(error) {
+       console.error(error);
+       res.status(500).json({error: 'Internal server error'});
+     }else{
+
+              image_path:results.image_path,
+         res.json(results);
+          console.log(results);
         }
 });
 });
+//新增好友
+
+const bodyParser = require('body-parser');
+//app.use(express.json());
+app.use(bodyParser.json());
+//app.use(express.urlencoded({extended:true}));
+app.use(bodyParser.urlencoded({extended:true}));undefined
+
+app.post('/addfriend',(req,res) => {
+ const{mineName,myphoneNumber,friendphoneNumber} = req.body; 
+ console.log(mineName);
+  console.log(myphoneNumber);
+  console.log(friendphoneNumber);
+  console.log(req.body);
+  const sql = 'insert INTO HtmlTest.phoneNumber(mineName,myphoneNumber,friendphoneNumber)values (?,?,?)';
+  db.query(sql,[mineName,myphoneNumber,friendphoneNumber],(error, results)  => {
+   if(error){
+       console.error(error);
+       res.status(500).json({error:'Internal server error'});
+      }else{
+             res.json(results);
+             console.log(results);
+        }
+});
+});
+
+
+ 
+//查詢個人訊息
+app.get('/searchPersonalMessage',(req,res) => {
+  const phoneSerialNumber =  req.query.phoneSerialNumber;
+  const sql= 'SELECT * FROM HtmlTest.flutterPicture where phoneSerialNumber = ? order by name desc limit 1';
+  
+  db.query(sql,[phoneSerialNumber],(error, results) => {
+   if(error){
+      console.error(error);
+      res.status(500).json({error:'Internal server error'});
+     }else{
+             res.json(results);
+             console.log(results);
+          }
+});
+});
+
 
 
 
