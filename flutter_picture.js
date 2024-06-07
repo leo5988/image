@@ -242,6 +242,38 @@ app.get('/searchPersonalMessage',(req,res) => {
 });
 });
 
+//查詢個人好友
+app.get('/searchPersonalFriend',(req,res) =>{
+   const myphoneNumber = req.query.myphoneNumber;
+   console.log(myphoneNumber);
+   const sql ='SELECT t.idphoneNumber,t.mineName,t.myphoneNumber,t1.locationName,t1.idposition,t1.phoneSerialNumber,t1.locationMessage,t1.currentAddress,t1.locationTime,t2.image_path,t2.idflutterPicture FROM HtmlTest.phoneNumber AS t INNER JOIN HtmlTest.peoplePosition AS t1 ON t.phoneSerialNumber = t1.phoneSerialNumber INNER JOIN HtmlTest.flutterPicture AS t2 ON t.phoneSerialNumber = t2.phoneSerialNumber WHERE t.myphoneNumber = ? AND (t1.phoneSerialNumber, t1.idposition) IN ( SELECT phoneSerialNumber, MAX(idposition) AS last_id FROM HtmlTest.peoplePosition GROUP BY phoneSerialNumber)AND (t2.phoneSerialNumber, t2.idflutterPicture) IN (SELECT phoneSerialNumber, MAX(idflutterPicture) AS last_id FROM HtmlTest.flutterPicture GROUP BY phoneSerialNumber ); ';
+
+   db.query(sql,[myphoneNumber],(error, results) =>{
+   if(error){
+      console.error(error);
+      res.status(500).json({error:'Internal server error'});
+    }else{
+          let data = [];
+          for (let i = 0; i < results.length; i++){
+             const originalDateTime = results[i].locationTime;
+             data.push({
+             locationName:results[i].locationName,
+            locationTime:formattedDateTime = new Date(originalDateTime).toLocaleString(), 
+             locationName:results[i].locationName,
+             currentAddress:results[i].currentAddress,
+             locationMessage:results[i].locationMessage,
+             image_path:results[i].image_path,
+             });
+            }
+            res.json(data);
+            console.log(data);
+           }
+});
+});
+
+
+
+
 
 
 
